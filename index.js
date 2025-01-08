@@ -1,17 +1,18 @@
 const express = require("express");
 const fs = require("fs");
 const app = express();
-const PORT = 3005;
+const cors = require("cors");
+const PORT = 4001;
 
 app.use(express.json());
+app.use(cors());
 
-const readAllMovies = () => {
+const readAllMovies = (res) => {
   fs.readFile("movies.json", "utf8", (err, data) => {
     const moviesJson = JSON.parse(data);
-    return moviesJson;
+    res.json(moviesJson);
   });
 };
-
 app.get("/add-movie", (req, res) => {
   fs.readFile("movies.json", "utf8", (err, data) => {
     const moviesJson = JSON.parse(data);
@@ -48,11 +49,27 @@ const findById = (req, res) => {
   });
 };
 
-const updateById = (req, res) => {
-  const movies = readAllMovies();
-};
+app.delete("/delete/:id", (req, res) => {
+  const movieId = req.params.id;
 
-app.get("/movies/:id", updateById);
+  fs.readFile("movies.json", "utf8", (err, data) => {
+    const moviesJson = JSON.parse(data);
+    const deleteMovies = moviesJson.filter((e) => e.id !== Number(movieId));
+
+    fs.writeFile(
+      "movies.json",
+      JSON.stringify(deleteMovies, null, 4),
+      "utf8",
+      (err) => {
+        res.json({ message: "Movie deleted successfully" });
+      }
+    );
+  });
+});
+
+app.get("/", (req, res) => {
+  readAllMovies(res);
+});
 
 app.get("/detail/:id", findById);
 
